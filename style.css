@@ -3,4 +3,5 @@ div.block {
     padding: .5em;
     margin: .5em;
     display: inline-block;
+    vertical-align: top;
 }
