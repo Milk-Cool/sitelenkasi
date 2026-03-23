@@ -1,0 +1,6 @@
+div.block {
+    border: 4px dashed #0003;
+    padding: .5em;
+    margin: .5em;
+    display: inline-block;
+}

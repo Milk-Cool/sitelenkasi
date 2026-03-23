@@ -1,0 +1,27 @@
+{
+  "name": "sitelenkasi",
+  "version": "0.1.0",
+  "description": "a tree-like ipa-inspited writing system for practically any language",
+  "keywords": [
+    "sitelen"
+  ],
+  "homepage": "https://github.com/Milk-Cool/sitelenkasi#readme",
+  "bugs": {
+    "url": "https://github.com/Milk-Cool/sitelenkasi/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Milk-Cool/sitelenkasi.git"
+  },
+  "license": "MIT",
+  "author": "Milk_Cool",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^8.0.2"
+  }
+}
