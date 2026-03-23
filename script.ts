@@ -14,6 +14,10 @@ const consonantModIn = document.querySelector("#consonant-mod-in") as HTMLSelect
 const consonantCanvas = document.querySelector("#consonant") as HTMLCanvasElement;
 const consonantCtx = consonantCanvas.getContext("2d")!;
 
+const phraseIn = document.querySelector("#phrase-input") as HTMLInputElement;
+const phraseCanvas = document.querySelector("#phrase") as HTMLCanvasElement;
+const phraseCtx = phraseCanvas.getContext("2d")!;
+
 const padding = 20;
 const pad = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
     ctx.save();
@@ -21,11 +25,13 @@ const pad = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
     ctx.translate(padding, padding);
 }
 
-for(const ctx of [vowelCtx, consonantCtx]) {
+for(const ctx of [vowelCtx, consonantCtx, phraseCtx]) {
     ctx.strokeStyle = "black";
     ctx.lineWidth = 10;
     ctx.lineCap = "round";
 }
+
+phraseCtx.lineWidth = 3;
 
 const generateVowel = (ctx: CanvasRenderingContext2D, w: number, h: number, f1: number, f2: number) => {
     const ratioL = 330 / (f1 - 130);
@@ -516,3 +522,60 @@ consonantPlace2In.addEventListener("change", generateConsonantGUI);
 consonantMannerIn.addEventListener("change", generateConsonantGUI);
 consonantModIn.addEventListener("change", generateConsonantGUI);
 generateConsonantGUI();
+
+const generatePhrase = (ctx: CanvasRenderingContext2D, w: number, h: number, phrase: string) => {
+    const maxLen = Math.max(Object.values(consonants).sort((a, b) => b.length - a.length)[0].length, Object.keys(ipaVowels).sort((a, b) => b.length - a.length)[0].length);
+    let i = 0;
+    const arr = [];
+    while(i < phrase.length) {
+        let skip = 1;
+        for(let x = maxLen; x > 0; x--) {
+            if(Object.values(consonants).includes(phrase.slice(i, i + x))) {
+                const k = Object.entries(consonants).find(y => y[1] === phrase.slice(i, i + x))![0].split("+");
+                if(k.length === 3) {
+                    arr.push(["consonant", k[0], "none", k[1], k[2]]);
+                } else {
+                    arr.push(["consonant", ...k]);
+                }
+                skip = x; break;
+            } else if(Object.keys(ipaVowels).includes(phrase.slice(i, i + x))) {
+                const vowel = ipaVowels[phrase.slice(i, i + x)];
+                arr.push(["vowel", ...vowel]);
+                skip = x; break;
+            }
+        }
+        i += skip;
+    }
+
+    const halfCircumference = Math.PI * w * 0.35;
+    const size = halfCircumference / arr.length;
+    for(let i = 0; i < arr.length; i++) {
+        const pointX = Math.cos(-Math.PI + Math.PI * (i / (arr.length - 1))) * w / 3 + w / 2;
+        const pointY = Math.sin(-Math.PI + Math.PI * (i / (arr.length - 1))) * h / 3 + 3 * h / 4;
+
+        ctx.save();
+        ctx.translate(pointX, pointY);
+        ctx.rotate(-Math.PI + Math.PI * (i / (arr.length - 1)) + Math.PI / 2);
+        ctx.translate(-size / 2, -size / 2);
+        if(arr[i][0] === "vowel")
+            generateVowel(ctx, size, size, ...arr[i].slice(1) as [number, number]);
+        else if(arr[i][0] === "consonant")
+            generateConsonant(ctx, size, size, ...arr[i].slice(1) as [ConsonantPlace, ConsonantPlaceOpt, ConsonantManner, ConsonantModifier]);
+        ctx.restore();
+
+        ctx.beginPath();
+        ctx.moveTo(w / 2, 3 * h / 4);
+        const cos = Math.cos(-Math.PI + Math.PI * (i / (arr.length - 1)) + Math.PI);
+        const sin = Math.sin(-Math.PI + Math.PI * (i / (arr.length - 1)) + Math.PI);
+        ctx.bezierCurveTo(w / 2, 5 * h / 8, pointX + cos * size, pointY + sin * size, pointX + cos * size / 2, pointY + sin * size / 2);
+        ctx.stroke();
+    }
+}
+const generatePhraseGUI = () => {
+    phraseCtx.clearRect(0, 0, phraseCanvas.width, phraseCanvas.height);
+    pad(phraseCtx, phraseCanvas.width, phraseCanvas.height);
+    generatePhrase(phraseCtx, phraseCanvas.width, phraseCanvas.height, phraseIn.value);
+    phraseCtx.restore();
+}
+phraseIn.addEventListener("change", generatePhraseGUI);
+generatePhraseGUI();
