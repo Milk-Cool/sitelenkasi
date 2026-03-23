@@ -570,6 +570,11 @@ const generatePhrase = (ctx: CanvasRenderingContext2D, w: number, h: number, phr
         ctx.bezierCurveTo(w / 2, 5 * h / 8, pointX + cos * size, pointY + sin * size, pointX + cos * size / 2, pointY + sin * size / 2);
         ctx.stroke();
     }
+    
+    ctx.beginPath();
+    ctx.moveTo(w / 2, 3 * h / 4);
+    ctx.lineTo(w / 2, h);
+    ctx.stroke();
 }
 const generatePhraseGUI = () => {
     phraseCtx.clearRect(0, 0, phraseCanvas.width, phraseCanvas.height);
