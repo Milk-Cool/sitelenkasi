@@ -658,3 +658,61 @@ const generatePhraseGUI = () => {
 phraseIn.addEventListener("change", generatePhraseGUI);
 phraseScaleIn.addEventListener("change", generatePhraseGUI);
 generatePhraseGUI();
+
+const exampleSize = 150;
+const generateCard = (parent: HTMLElement, label: string, render: (ctx: CanvasRenderingContext2D) => any) => {
+    const el = document.createElement("div");
+    el.classList.add("card");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = exampleSize;
+    canvas.height = exampleSize;
+    el.appendChild(canvas);
+
+    const ctx = canvas.getContext("2d")!;
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+
+    pad(ctx, exampleSize, exampleSize, 20);
+    render(ctx);
+    ctx.restore();
+
+    const p = document.createElement("p");
+    p.innerText = label;
+    el.appendChild(p);
+
+    parent.appendChild(el);
+}
+
+const vowelFrequencies: (typeof ipaVowels[number])[] = [[300, 700, false], [800, 700, true], [300, 2400, false], [800, 2400, true]];
+const vowelExamples = ["i", "y", "a", "e", "o", "u"];
+
+const consonantExamples = ["b", "p", "k", "l", "w", "xʼ", "kʘ"];
+
+for(const freq of vowelFrequencies)
+    generateCard(document.querySelector("#key-vowels-frequencies") as HTMLDivElement, `F1 = ${freq[0]}; F2 = ${freq[1]}; ${freq[2] ? "rounded" : "unrounded"}`,
+        ctx => generateVowel(ctx, exampleSize, exampleSize, ...freq));
+for(const ex of vowelExamples)
+    generateCard(document.querySelector("#key-vowels-examples") as HTMLDivElement, `IPA: /${ex}/`,
+        ctx => generateVowel(ctx, exampleSize, exampleSize, ...ipaVowels[ex]));
+for(const pl of consonantPlaces)
+    generateCard(document.querySelector("#key-consonants-places") as HTMLDivElement, `place: ${pl}`,
+        ctx => generateConsonantPlace(ctx, exampleSize, exampleSize, pl));
+for(const pl of consonantManners)
+    generateCard(document.querySelector("#key-consonants-manners") as HTMLDivElement, `manner: ${pl}`,
+        ctx => generateConsonantManner(ctx, exampleSize, exampleSize, pl));
+for(const pl of consonantModifiers)
+    generateCard(document.querySelector("#key-consonants-modifiers") as HTMLDivElement, `modifier: ${pl}`,
+        ctx => generateConsonant(ctx, exampleSize, exampleSize, "alveolar", "none", "sibilant fricative", pl));
+for(const ex of consonantExamples) {
+    const k = Object.entries(consonants).find(y => y[1] === ex)![0].split("+");
+    let args: [ConsonantPlace, ConsonantPlaceOpt, ConsonantManner, ConsonantModifier];
+    if(k.length === 3) {
+        args = [k[0] as ConsonantPlace, "none", k[1] as ConsonantManner, k[2] as ConsonantModifier];
+    } else {
+        args = k as typeof args;
+    }
+    generateCard(document.querySelector("#key-consonants-examples") as HTMLDivElement, `IPA: /${ex}/`,
+        ctx => generateConsonant(ctx, exampleSize, exampleSize, ...args));
+}

@@ -5,3 +5,8 @@ div.block {
     display: inline-block;
     vertical-align: top;
 }
+div.card {
+    text-align: center;
+    display: inline-block;
+    padding: .5em;
+}
