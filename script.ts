@@ -81,8 +81,8 @@ generateVowelGUI();
 
 const consonantPlaces = ["bilabial", "labiodental", "linguolabial", "dental", "alveolar", "postalveolar", "retroflex", "palatal", "velar", "uvular", "epiglottal", "glottal"] as const;
 const consonantPlacesOpt = [...consonantPlaces, "none"] as const;
-const consonantManners = ["nasal", "plosive", "sibilant affricate", "non-sibilant affricate", "sibilant fricative", "non-sibilant fricative", "approximant", "tap/flap", "trill", "lateral affricate", "lateral fricative", "lateral approximant", "lateral tap/flap", "implosive", "ejective", "click"] as const;
-const consonantModifiers = ["voiced", "none"] as const;
+const consonantManners = ["nasal", "plosive", "sibilant affricate", "non-sibilant affricate", "sibilant fricative", "non-sibilant fricative", "approximant", "tap/flap", "trill", "lateral affricate", "lateral fricative", "lateral approximant", "lateral tap/flap", "implosive", "click"] as const;
+const consonantModifiers = ["voiced", "none", "ejective"] as const;
 type ConsonantPlace = typeof consonantPlaces[number];
 type ConsonantPlaceOpt = typeof consonantPlacesOpt[number];
 type ConsonantManner = typeof consonantManners[number];
@@ -264,7 +264,6 @@ const generateConsonantManner = (ctx: CanvasRenderingContext2D, w: number, h: nu
             ctx.moveTo(w / 2, 3 * h / 4);
             ctx.lineTo(9 * w / 16, 11 * h / 16);
             ctx.lineTo(w / 2, 5 * h / 8);
-        case "ejective":
             ctx.moveTo(w / 2, 5 * h / 8);
             ctx.lineTo(7 * w / 16, 11 * h / 16);
             ctx.lineTo(w / 2, 3 * h / 4);
@@ -280,6 +279,14 @@ const generateConsonant = (ctx: CanvasRenderingContext2D, w: number, h: number, 
 
     if(modifier === "voiced") {
         ctx.moveTo(3 * w / 8, 7 * h / 8);
+        ctx.lineTo(5 * w / 8, 7 * h / 8);
+        ctx.stroke();
+    } else if(modifier === "ejective") {
+        ctx.moveTo(3 * w / 8, 7 * h / 8);
+        ctx.lineTo(5 * w / 8, 7 * h / 8);
+        ctx.lineTo(5 * w / 8, 3 * h / 4);
+        ctx.lineTo(3 * w / 8, 3 * h / 4);
+        ctx.lineTo(3 * w / 8, 7 * h / 8);
         ctx.lineTo(5 * w / 8, 7 * h / 8);
         ctx.stroke();
     }
@@ -493,21 +500,39 @@ const consonants: Partial<Record<IPAConsonantKey, string>> = {
     "uvular+implosive+voiced": "ʛ",
     "uvular+implosive+none": "ʛ̥",
 
-    // TODO: ejectives (and maybe a better system for them?)
-
-    // "bilabial+ejective+none": "pʼ",
-    // "alveolar+ejective+none": "tʼ",
-    // "dental+ejective+none": "tʼ", // yep the same one
-    // "retroflex+ejective+none": "ʈʼ",
-    // "palatal+ejective+none": "cʼ",
-    // "velar+ejective+none": "kʼ",
-    // "uvular+ejective+none": "qʼ",
-    // "labiodental+ejective+none": "qʼ",
+    "bilabial+plosive+ejective": "pʼ",
+    "alveolar+plosive+ejective": "tʼ",
+    "dental+plosive+ejective": "tʼ", // yep the same one
+    "retroflex+plosive+ejective": "ʈʼ",
+    "palatal+plosive+ejective": "cʼ",
+    "velar+plosive+ejective": "kʼ",
+    "uvular+plosive+ejective": "qʼ",
+    "labiodental+non-sibilant fricative+ejective": "fʼ",
+    "alveolar+non-sibilant fricative+ejective": "sʼ",
+    "retroflex+non-sibilant fricative+ejective": "ʂʼ",
+    "alveolar+palatal+non-sibilant fricative+ejective": "ɕʼ",
+    "velar+non-sibilant fricative+ejective": "xʼ",
+    "uvular+non-sibilant fricative+ejective": "χʼ",
+    "bilabial+non-sibilant fricative+ejective": "ɸʼ",
+    "dental+non-sibilant fricative+ejective": "θʼ",
+    "palatal+alveolar+non-sibilant fricative+ejective": "ʃʼ",
+    "dental+non-sibilant affricate+ejective": "t̪θʼ",
+    "alveolar+non-sibilant affricate+ejective": "tsʼ",
+    "retroflex+non-sibilant affricate+ejective": "ʈʂʼ",
+    "palatal+alveolar+non-sibilant affricate+ejective": "t̠ʃʼ",
+    "velar+non-sibilant affricate+ejective": "kxʼ",
+    "uvular+non-sibilant affricate+ejective": "qχʼ",
+    "alveolar+lateral fricative+ejective": "ɬʼ",
+    "alveolar+lateral affricate+ejective": "tɬʼ",
+    "palatal+lateral affricate+ejective": "c𝼆ʼ",
+    "velar+lateral affricate+ejective": "k𝼄ʼ",
 
     "bilabial+click+none": "kʘ",
     "dental+click+none": "kǀ",
     "alveolar+click+none": "kǃ",
-    // TODO: the rest of the clicks
+    "velar+click+none": "kǁ",
+    "retroflex+click+none": "k𝼊",
+    "palatal+click+none": "kǂ"
 };
 const generateConsonantGUI = () => {
     const combo = `${consonantPlace1In.value}+${consonantPlace2In.value === "none" ? "" : consonantPlace2In.value + "+"}${consonantMannerIn.value}+${consonantModIn.value}`;
