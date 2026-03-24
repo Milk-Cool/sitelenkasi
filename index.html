@@ -26,7 +26,9 @@
         </div>
         <div class="block">
             <h2>phrase</h2>
-            <label for="phrase-input">phrase (ipa): </label><input id="phrase-input" value="sina moku e telo suwi anu seme"><br>
+            <label for="phrase-input">phrase (ipa): </label><input id="phrase-input" value="[[si][na]] [[mo][ku]] [e] [[te][lo]] [[su][wi]] [[a][nu]] [[se][me]]"><br>
+            <label for="phrase-scale-in">scale: </label><input id="phrase-scale-in" type="range" min="300" max="5000" value="1200" step="100"><span id="phrase-scale-out"></span><br>
+            errors: <span id="phrase-errors"></span><br>
             <canvas width="1200" height="1200" id="phrase"></canvas>
         </div>
     </body>
