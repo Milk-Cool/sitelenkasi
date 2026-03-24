@@ -2,6 +2,7 @@ const vowelF1In = document.querySelector("#vowel-f1-in") as HTMLInputElement;
 const vowelF2In = document.querySelector("#vowel-f2-in") as HTMLInputElement;
 const vowelF1Out = document.querySelector("#vowel-f1-out") as HTMLSpanElement;
 const vowelF2Out = document.querySelector("#vowel-f2-out") as HTMLSpanElement;
+const vowelRoundedIn = document.querySelector("#vowel-rounded-in") as HTMLInputElement;
 const vowelIPA = document.querySelector("#vowel-ipa") as HTMLSpanElement;
 const vowelCanvas = document.querySelector("#vowel") as HTMLCanvasElement;
 const vowelCtx = vowelCanvas.getContext("2d")!;
@@ -33,7 +34,7 @@ for(const ctx of [vowelCtx, consonantCtx, phraseCtx]) {
     ctx.lineCap = "round";
 }
 
-const generateVowel = (ctx: CanvasRenderingContext2D, w: number, h: number, f1: number, f2: number) => {
+const generateVowel = (ctx: CanvasRenderingContext2D, w: number, h: number, f1: number, f2: number, rounded: boolean) => {
     const ratioL = 330 / (f1 - 130);
     const ratioR = 1130 / (f2 - 140);
     const ratioLAbs = ratioL / (ratioL + 1);
@@ -41,6 +42,10 @@ const generateVowel = (ctx: CanvasRenderingContext2D, w: number, h: number, f1: 
     
     ctx.beginPath();
     ctx.moveTo(w / 2, h);
+    if(rounded) {
+        ctx.arc(w / 2, h, w / 8, 0, 2 * Math.PI);
+        ctx.moveTo(w / 2, h);
+    }
     ctx.lineTo(w / 2, h / 3);
     ctx.bezierCurveTo(w / 2, h / 6, w / 2, 0, w / 8, 0);
     ctx.bezierCurveTo(w / 8, h / 3, w / 4, h * ratioLAbs, w / 2, h * ratioLAbs);
@@ -51,32 +56,33 @@ const generateVowel = (ctx: CanvasRenderingContext2D, w: number, h: number, f1: 
     ctx.lineTo(5 * w / 8, h);
     ctx.stroke();
 };
-const ipaVowels: Record<string, [number, number]> = {
-    "i": [300, 2350],
-    "ɪ": [360, 2200],
-    "e": [425, 2150],
-    "ɛ": [575, 1850],
-    "æ": [770, 1780],
-    "a": [810, 1640],
-    "ä": [780, 1200],
-    "ɑ": [780, 1060],
-    "ɒ": [650, 850],
-    "ɔ": [550, 840],
-    "o": [400, 740],
-    "u": [300, 750],
-    "ʊ": [330, 900],
+const ipaVowels: Record<string, [number, number, boolean]> = { // [f1, f2, rounded]
+    "i": [300, 2350, false],
+    "ɪ": [360, 2200, false],
+    "e": [425, 2150, false],
+    "ɛ": [575, 1850, false],
+    "æ": [770, 1780, false],
+    "a": [810, 1640, false],
+    "ä": [780, 1200, false],
+    "ɑ": [780, 1060, false],
+    "ɒ": [650, 850, true],
+    "ɔ": [550, 840, true],
+    "o": [400, 740, true],
+    "u": [300, 750, true],
+    "ʊ": [330, 900, true],
 };
 const generateVowelGUI = () => {
     vowelF1Out.innerText = vowelF1In.value;
     vowelF2Out.innerText = vowelF2In.value;
-    vowelIPA.innerText = Object.entries(ipaVowels).sort((a, b) => Math.hypot(a[1][0] - vowelF1In.valueAsNumber, a[1][1] - vowelF2In.valueAsNumber) - Math.hypot(b[1][0] - vowelF1In.valueAsNumber, b[1][1] - vowelF2In.valueAsNumber))[0][0];
+    vowelIPA.innerText = Object.entries(ipaVowels).filter(x => x[1][2] === vowelRoundedIn.checked).sort((a, b) => Math.hypot(a[1][0] - vowelF1In.valueAsNumber, a[1][1] - vowelF2In.valueAsNumber) - Math.hypot(b[1][0] - vowelF1In.valueAsNumber, b[1][1] - vowelF2In.valueAsNumber))[0][0];
     vowelCtx.clearRect(0, 0, vowelCanvas.width, vowelCanvas.height);
     pad(vowelCtx, vowelCanvas.width, vowelCanvas.height, 20);
-    generateVowel(vowelCtx, vowelCanvas.width, vowelCanvas.height, vowelF1In.valueAsNumber, vowelF2In.valueAsNumber);
+    generateVowel(vowelCtx, vowelCanvas.width, vowelCanvas.height, vowelF1In.valueAsNumber, vowelF2In.valueAsNumber, vowelRoundedIn.checked);
     vowelCtx.restore();
 };
 vowelF1In.addEventListener("change", generateVowelGUI);
 vowelF2In.addEventListener("change", generateVowelGUI);
+vowelRoundedIn.addEventListener("change", generateVowelGUI);
 generateVowelGUI();
 
 const consonantPlaces = ["bilabial", "labiodental", "linguolabial", "dental", "alveolar", "postalveolar", "retroflex", "palatal", "velar", "uvular", "epiglottal", "glottal"] as const;
@@ -596,7 +602,7 @@ const generatePhrase = (ctx: CanvasRenderingContext2D, w: number, h: number, phr
         ctx.rotate(angle + Math.PI / 2);
         ctx.translate(-size / 2, -size / 2);
         if(arr[i][0] === "vowel")
-            generateVowel(ctx, size, size, ...arr[i].slice(1) as [number, number]);
+            generateVowel(ctx, size, size, ...arr[i].slice(1) as [number, number, boolean]);
         else if(arr[i][0] === "consonant")
             generateConsonant(ctx, size, size, ...arr[i].slice(1) as [ConsonantPlace, ConsonantPlaceOpt, ConsonantManner, ConsonantModifier]);
         else if(arr[i][0] === "subphrase")
