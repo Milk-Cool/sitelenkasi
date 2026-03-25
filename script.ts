@@ -12,6 +12,7 @@ const consonantPlace2In = document.querySelector("#consonant-place2-in") as HTML
 const consonantMannerIn = document.querySelector("#consonant-manner-in") as HTMLSelectElement;
 const consonantIPA = document.querySelector("#consonant-ipa") as HTMLSpanElement;
 const consonantModIn = document.querySelector("#consonant-mod-in") as HTMLSelectElement;
+const consonantModAddIn = document.querySelector("#consonant-mod-add-in") as HTMLSelectElement;
 const consonantCanvas = document.querySelector("#consonant") as HTMLCanvasElement;
 const consonantCtx = consonantCanvas.getContext("2d")!;
 
@@ -109,10 +110,12 @@ const consonantPlaces = ["bilabial", "labiodental", "linguolabial", "dental", "a
 const consonantPlacesOpt = [...consonantPlaces, "none"] as const;
 const consonantManners = ["nasal", "plosive", "sibilant affricate", "non-sibilant affricate", "sibilant fricative", "non-sibilant fricative", "approximant", "tap/flap", "trill", "lateral affricate", "lateral fricative", "lateral approximant", "lateral tap/flap", "implosive", "click"] as const;
 const consonantModifiers = ["voiced", "none", "ejective"] as const;
+const consonantModifiersAdditional = ["palatalized"] as const;
 type ConsonantPlace = typeof consonantPlaces[number];
 type ConsonantPlaceOpt = typeof consonantPlacesOpt[number];
 type ConsonantManner = typeof consonantManners[number];
 type ConsonantModifier = typeof consonantModifiers[number];
+type ConsonantModifierAdditional = typeof consonantModifiersAdditional[number];
 
 const makeOption = (opt: string, sel: boolean) => {
     const el = document.createElement("option");
@@ -129,6 +132,8 @@ for(const manner of consonantManners)
     consonantMannerIn.appendChild(makeOption(manner, manner === "nasal"));
 for(const mod of consonantModifiers)
     consonantModIn.appendChild(makeOption(mod, mod === "voiced"));
+for(const mod of consonantModifiersAdditional)
+    consonantModAddIn.appendChild(makeOption(mod, false));
 
 const generateConsonantPlace = (ctx: CanvasRenderingContext2D, w: number, h: number, place: ConsonantPlaceOpt) => {
     if(place === "none") return;
@@ -297,11 +302,17 @@ const generateConsonantManner = (ctx: CanvasRenderingContext2D, w: number, h: nu
     }
     ctx.stroke();
 }
-const generateConsonant = (ctx: CanvasRenderingContext2D, w: number, h: number, place1: ConsonantPlace, place2: ConsonantPlaceOpt, manner: ConsonantManner, modifier: ConsonantModifier) => {
+const generateConsonant = (ctx: CanvasRenderingContext2D, w: number, h: number, place1: ConsonantPlace, place2: ConsonantPlaceOpt, manner: ConsonantManner, modifier: ConsonantModifier, modifiersAdditional: ConsonantModifierAdditional[]) => {
     ctx.beginPath();
     ctx.moveTo(w / 2, h);
     ctx.lineTo(w / 2, 3 * h / 4);
     ctx.stroke();
+
+    if(modifiersAdditional.includes("palatalized")) {
+        ctx.moveTo(5 * w / 8, h);
+        ctx.arc(5 * w / 8, h, ctx.lineWidth / 2, 0, Math.PI * 2);
+        ctx.stroke();
+    }
 
     if(modifier === "voiced") {
         ctx.moveTo(3 * w / 8, 7 * h / 8);
@@ -335,7 +346,14 @@ const generateConsonant = (ctx: CanvasRenderingContext2D, w: number, h: number, 
     ctx.restore();
 };
 
-type IPAConsonantKey = `${ConsonantPlace}+${ConsonantManner}+${ConsonantModifier}` | `${ConsonantPlace}+${ConsonantPlace}+${ConsonantManner}+${ConsonantModifier}`;
+type IPAConsonantKeyModifierAdditional = 
+    `${ConsonantModifierAdditional}`
+    | `${ConsonantModifierAdditional}~${ConsonantModifierAdditional}`
+    | `${ConsonantModifierAdditional}~${ConsonantModifierAdditional}~${ConsonantModifierAdditional}`;
+type IPAConsonantKey =
+    `${ConsonantPlace}+${ConsonantManner}+${ConsonantModifier}`
+    | `${ConsonantPlace}+${ConsonantPlace}+${ConsonantManner}+${ConsonantModifier}`
+    | `${ConsonantPlace}+${ConsonantPlaceOpt}+${ConsonantManner}+${ConsonantModifier}+${ConsonantModifierAdditional}`;
 const consonants: Partial<Record<IPAConsonantKey, string>> = {
     "bilabial+nasal+none": "m̥",
     "bilabial+nasal+voiced": "m",
@@ -446,6 +464,7 @@ const consonants: Partial<Record<IPAConsonantKey, string>> = {
     "postalveolar+approximant+voiced": "ɹ̠",
     "retroflex+approximant+voiced": "ɻ",
     "palatal+approximant+voiced": "j",
+    "palatal+none+approximant+voiced+palatalized": "j",
     "velar+approximant+voiced": "ɰ",
     "glottal+approximant+voiced": "˷",
     "bilabial+tap/flap+voiced": "ⱱ̟",
@@ -560,18 +579,22 @@ const consonants: Partial<Record<IPAConsonantKey, string>> = {
     "retroflex+click+none": "k𝼊",
     "palatal+click+none": "kǂ"
 };
+const getConsonantIPA = (place1: ConsonantPlace, place2: ConsonantPlaceOpt, manner: ConsonantManner, mod: ConsonantModifier, modAdd: ConsonantModifierAdditional[]) => {
+    const combo = `${place1}+${place2 === "none" ? "" : place2 + "+"}${manner}+${mod}`;
+    return (combo in consonants ? consonants[combo as IPAConsonantKey]! : "unknown") + (modAdd.includes("palatalized") ? "ʲ" : "");
+};
 const generateConsonantGUI = () => {
-    const combo = `${consonantPlace1In.value}+${consonantPlace2In.value === "none" ? "" : consonantPlace2In.value + "+"}${consonantMannerIn.value}+${consonantModIn.value}`;
-    consonantIPA.innerText = combo in consonants ? consonants[combo as IPAConsonantKey]! : "unknown";
+    consonantIPA.innerText = getConsonantIPA(consonantPlace1In.value as ConsonantPlace, consonantPlace2In.value as ConsonantPlaceOpt, consonantMannerIn.value as ConsonantManner, consonantModIn.value as ConsonantModifier, Array.from(consonantModAddIn.selectedOptions).map(x => x.value) as ConsonantModifierAdditional[]);
     consonantCtx.clearRect(0, 0, consonantCanvas.width, consonantCanvas.height);
     pad(consonantCtx, consonantCanvas.width, consonantCanvas.height, 20);
-    generateConsonant(consonantCtx, consonantCanvas.width, consonantCanvas.height, consonantPlace1In.value as ConsonantPlace, consonantPlace2In.value as ConsonantPlaceOpt, consonantMannerIn.value as ConsonantManner, consonantModIn.value as ConsonantModifier);
+    generateConsonant(consonantCtx, consonantCanvas.width, consonantCanvas.height, consonantPlace1In.value as ConsonantPlace, consonantPlace2In.value as ConsonantPlaceOpt, consonantMannerIn.value as ConsonantManner, consonantModIn.value as ConsonantModifier, Array.from(consonantModAddIn.selectedOptions).map(x => x.value) as ConsonantModifierAdditional[]);
     consonantCtx.restore();
 };
 consonantPlace1In.addEventListener("change", generateConsonantGUI);
 consonantPlace2In.addEventListener("change", generateConsonantGUI);
 consonantMannerIn.addEventListener("change", generateConsonantGUI);
 consonantModIn.addEventListener("change", generateConsonantGUI);
+consonantModAddIn.addEventListener("change", generateConsonantGUI);
 generateConsonantGUI();
 
 const generatePhrase = (ctx: CanvasRenderingContext2D, w: number, h: number, phrase: string) => {
@@ -595,12 +618,17 @@ const generatePhrase = (ctx: CanvasRenderingContext2D, w: number, h: number, phr
         for(let x = maxLen; x > 0; x--) {
             if(Object.values(consonants).includes(phrase.slice(i, i + x))) {
                 const k = Object.entries(consonants).find(y => y[1] === phrase.slice(i, i + x))![0].split("+");
+                const modAdd: ConsonantModifierAdditional[] = [];
+                let skipAdd = 0;
+                if(phrase[i + x] === "ʲ") { modAdd.push("palatalized"); skipAdd++; }
                 if(k.length === 3) {
-                    arr.push(["consonant", k[0], "none", k[1], k[2]]);
+                    arr.push(["consonant", k[0], "none", k[1], k[2], modAdd]);
+                } else if(k.length === 4) {
+                    arr.push(["consonant", ...k, modAdd]);
                 } else {
-                    arr.push(["consonant", ...k]);
+                    arr.push(["consonant", ...k.slice(0, 4), k[4].split("~").concat(modAdd)])
                 }
-                skip = x; break;
+                skip = x + skipAdd; break;
             } else if(Object.keys(ipaVowels).includes(phrase.slice(i, i + x))) {
                 const vowel = ipaVowels[phrase.slice(i, i + x)];
                 arr.push(["vowel", ...vowel]);
@@ -624,7 +652,7 @@ const generatePhrase = (ctx: CanvasRenderingContext2D, w: number, h: number, phr
         if(arr[i][0] === "vowel")
             generateVowel(ctx, size, size, ...arr[i].slice(1) as [number, number, boolean]);
         else if(arr[i][0] === "consonant")
-            generateConsonant(ctx, size, size, ...arr[i].slice(1) as [ConsonantPlace, ConsonantPlaceOpt, ConsonantManner, ConsonantModifier]);
+            generateConsonant(ctx, size, size, ...arr[i].slice(1) as [ConsonantPlace, ConsonantPlaceOpt, ConsonantManner, ConsonantModifier, ConsonantModifierAdditional[]]);
         else if(arr[i][0] === "subphrase")
             if(generatePhrase(ctx, size, size, arr[i][1]) === -1) return -1;
         ctx.restore();
@@ -704,14 +732,19 @@ for(const pl of consonantManners)
         ctx => generateConsonantManner(ctx, exampleSize, exampleSize, pl));
 for(const pl of consonantModifiers)
     generateCard(document.querySelector("#key-consonants-modifiers") as HTMLDivElement, `modifier: ${pl}`,
-        ctx => generateConsonant(ctx, exampleSize, exampleSize, "alveolar", "none", "sibilant fricative", pl));
+        ctx => generateConsonant(ctx, exampleSize, exampleSize, "alveolar", "none", "sibilant fricative", pl, []));
+for(const pl of (["none"] as (ConsonantModifierAdditional | "none")[]).concat([...consonantModifiersAdditional]))
+    generateCard(document.querySelector("#key-consonants-additional-modifiers") as HTMLDivElement, `add. modifier: ${pl}`,
+        ctx => generateConsonant(ctx, exampleSize, exampleSize, "alveolar", "none", "lateral approximant", "voiced", pl === "none" ? [] : [pl]));
 for(const ex of consonantExamples) {
     const k = Object.entries(consonants).find(y => y[1] === ex)![0].split("+");
-    let args: [ConsonantPlace, ConsonantPlaceOpt, ConsonantManner, ConsonantModifier];
+    let args: [ConsonantPlace, ConsonantPlaceOpt, ConsonantManner, ConsonantModifier, ConsonantModifierAdditional[]];
     if(k.length === 3) {
-        args = [k[0] as ConsonantPlace, "none", k[1] as ConsonantManner, k[2] as ConsonantModifier];
+        args = [k[0] as ConsonantPlace, "none", k[1] as ConsonantManner, k[2] as ConsonantModifier, []];
+    } else if(k.length === 4) {
+        args = [...k as [ConsonantPlace, ConsonantPlaceOpt, ConsonantManner, ConsonantModifier], []];
     } else {
-        args = k as typeof args;
+        args = [...k.slice(0, 4) as [ConsonantPlace, ConsonantPlaceOpt, ConsonantManner, ConsonantModifier], k[4].split("~") as ConsonantModifierAdditional[]];
     }
     generateCard(document.querySelector("#key-consonants-examples") as HTMLDivElement, `IPA: /${ex}/`,
         ctx => generateConsonant(ctx, exampleSize, exampleSize, ...args));
