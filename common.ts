@@ -1,37 +1,42 @@
-export const ipaVowels: Record<string, [number, number, boolean]> = { // [f1, f2, rounded]
-    "i": [300, 2350, false],
-    "y": [300, 2350, true],
-    "ɨ": [300, 1600, false],
-    "ʉ": [300, 1600, true],
-    "ɘ": [425, 1600, false],
-    "ɵ": [425, 1600, true],
-    "ə": [500, 1600, false],
-    "ɜ": [575, 1600, false],
-    "ɞ": [575, 1600, true],
-    "ɐ": [770, 1600, false],
-    "ɪ": [360, 2200, false],
-    "ʏ": [360, 2200, true],
-    "e": [425, 2150, false],
-    "ø": [425, 2150, true],
-    "e̞": [500, 2150, false],
-    "ø̞": [500, 2150, true],
-    "ɛ": [575, 1850, false],
-    "œ": [575, 1850, true],
-    "æ": [770, 1780, false],
-    "a": [810, 1640, false],
-    "ɶ": [810, 1640, true],
-    "ä": [780, 1200, false],
-    "ɑ": [780, 1060, false],
-    "ɒ": [650, 850, true],
-    "ʌ": [550, 840, false],
-    "ɔ": [550, 840, true],
-    "o": [400, 740, true],
-    "ɤ": [400, 740, false],
-    "o̞": [500, 740, true],
-    "ɤ̞": [500, 740, false],
-    "ɯ": [300, 750, false],
-    "u": [300, 750, true],
-    "ʊ": [330, 900, true],
+export const vowelOpennesses = ["open", "near-open", "open-mid", "mid", "close-mid", "near-close", "close"] as const;
+export type VowelOpenness = typeof vowelOpennesses[number];
+export const vowelBacknesses = ["front", "front central", "central", "central back", "back"] as const;
+export type VowelBackness = typeof vowelBacknesses[number];
+
+export const ipaVowels: Record<string, [number, number, boolean, VowelOpenness, VowelBackness]> = { // [f1, f2, rounded, openness, backness]
+    "i": [300, 2350, false, "close", "front"],
+    "y": [300, 2350, true, "close", "front"],
+    "ɨ": [300, 1600, false, "close", "central"],
+    "ʉ": [300, 1600, true, "close", "central"],
+    "ɘ": [425, 1600, false, "close-mid", "central"],
+    "ɵ": [425, 1600, true, "close-mid", "central"],
+    "ə": [500, 1600, false, "mid", "central"],
+    "ɜ": [575, 1600, false, "open-mid", "central"],
+    "ɞ": [575, 1600, true, "open-mid", "central"],
+    "ɐ": [770, 1600, false, "near-open", "central"],
+    "ɪ": [360, 2200, false, "near-close", "front central"],
+    "ʏ": [360, 2200, true, "near-close", "front central"],
+    "e": [425, 2150, false, "close-mid", "front"],
+    "ø": [425, 2150, true, "close-mid", "front"],
+    "e̞": [500, 2150, false, "mid", "front"],
+    "ø̞": [500, 2150, true, "mid", "front"],
+    "ɛ": [575, 1850, false, "open-mid", "front"],
+    "œ": [575, 1850, true, "open-mid", "front"],
+    "æ": [770, 1780, false, "near-open", "front"],
+    "a": [810, 1640, false, "open", "front"],
+    "ɶ": [810, 1640, true, "open", "front"],
+    "ä": [780, 1200, false, "open", "central"],
+    "ɑ": [780, 1060, false, "open", "back"],
+    "ɒ": [650, 850, true, "open", "back"],
+    "ʌ": [550, 840, false, "open-mid", "back"],
+    "ɔ": [550, 840, true, "open-mid", "back"],
+    "o": [400, 740, true, "close-mid", "back"],
+    "ɤ": [400, 740, false, "close-mid", "back"],
+    "o̞": [500, 740, true, "mid", "back"],
+    "ɤ̞": [500, 740, false, "mid", "back"],
+    "ɯ": [300, 750, false, "close", "back"],
+    "u": [300, 750, true, "close", "back"],
+    "ʊ": [330, 900, true, "near-close", "central back"],
 };
 
 export const consonantPlaces = ["bilabial", "labiodental", "linguolabial", "dental", "alveolar", "postalveolar", "retroflex", "palatal", "velar", "uvular", "epiglottal", "glottal"] as const;
@@ -282,3 +287,17 @@ export const getConsonantIPA = (place1: ConsonantPlace, place2: ConsonantPlaceOp
     const combo = `${place1}+${place2 === "none" ? "" : place2 + "+"}${manner}+${mod}`;
     return (combo in consonants ? consonants[combo as IPAConsonantKey]! : "unknown") + (modAdd.includes("palatalized") ? "ʲ" : "");
 };
+
+export const makeOption = (opt: string, sel: boolean) => {
+    const el = document.createElement("option");
+    el.value = opt;
+    el.innerText = opt;
+    el.selected = sel;
+    return el;
+}
+
+export const pad = (ctx: CanvasRenderingContext2D, w: number, h: number, padding: number) => {
+    ctx.save();
+    ctx.scale((w - 2 * padding) / w, (h - 2 * padding) / h);
+    ctx.translate(padding, padding);
+}

@@ -1,4 +1,4 @@
-import { ConsonantManner, consonantManners, ConsonantModifier, ConsonantModifierAdditional, consonantModifiers, consonantModifiersAdditional, ConsonantPlace, ConsonantPlaceOpt, consonantPlaces, consonantPlacesOpt, consonants, getConsonantIPA, ipaVowels } from "./common";
+import { ConsonantManner, consonantManners, ConsonantModifier, ConsonantModifierAdditional, consonantModifiers, consonantModifiersAdditional, ConsonantPlace, ConsonantPlaceOpt, consonantPlaces, consonantPlacesOpt, consonants, getConsonantIPA, ipaVowels, makeOption, pad } from "./common";
 
 const vowelF1In = document.querySelector("#v1-vowel-f1-in") as HTMLInputElement;
 const vowelF2In = document.querySelector("#v1-vowel-f2-in") as HTMLInputElement;
@@ -24,12 +24,6 @@ const phraseScaleOut = document.querySelector("#v1-phrase-scale-out") as HTMLSpa
 const phraseErrors = document.querySelector("#v1-phrase-errors") as HTMLSpanElement;
 const phraseCanvas = document.querySelector("#v1-phrase") as HTMLCanvasElement;
 const phraseCtx = phraseCanvas.getContext("2d")!;
-
-const pad = (ctx: CanvasRenderingContext2D, w: number, h: number, padding: number) => {
-    ctx.save();
-    ctx.scale((w - 2 * padding) / w, (h - 2 * padding) / h);
-    ctx.translate(padding, padding);
-}
 
 for(const ctx of [vowelCtx, consonantCtx, phraseCtx]) {
     ctx.strokeStyle = "black";
@@ -73,13 +67,6 @@ vowelF2In.addEventListener("change", generateVowelGUI);
 vowelRoundedIn.addEventListener("change", generateVowelGUI);
 generateVowelGUI();
 
-const makeOption = (opt: string, sel: boolean) => {
-    const el = document.createElement("option");
-    el.value = opt;
-    el.innerText = opt;
-    el.selected = sel;
-    return el;
-}
 for(const place of consonantPlaces)
     consonantPlace1In.appendChild(makeOption(place, place === "alveolar"));
 for(const place of consonantPlacesOpt)
@@ -432,7 +419,7 @@ const generateCard = (parent: HTMLElement, label: string, render: (ctx: CanvasRe
     parent.appendChild(el);
 }
 
-const vowelFrequencies: (typeof ipaVowels[number])[] = [[300, 700, false], [800, 700, true], [300, 2400, false], [800, 2400, true]];
+const vowelFrequencies: ([number, number, boolean])[] = [[300, 700, false], [800, 700, true], [300, 2400, false], [800, 2400, true]];
 const vowelExamples = ["i", "y", "a", "e", "o", "u"];
 
 const consonantExamples = ["b", "p", "k", "l", "w", "xʼ", "kʘ"];
@@ -442,7 +429,7 @@ for(const freq of vowelFrequencies)
         ctx => generateVowel(ctx, exampleSize, exampleSize, ...freq));
 for(const ex of vowelExamples)
     generateCard(document.querySelector("#v1-key-vowels-examples") as HTMLDivElement, `IPA: /${ex}/`,
-        ctx => generateVowel(ctx, exampleSize, exampleSize, ...ipaVowels[ex]));
+        ctx => generateVowel(ctx, exampleSize, exampleSize, ipaVowels[ex][0], ipaVowels[ex][1], ipaVowels[ex][2]));
 for(const pl of consonantPlaces)
     generateCard(document.querySelector("#v1-key-consonants-places") as HTMLDivElement, `place: ${pl}`,
         ctx => generateConsonantPlace(ctx, exampleSize, exampleSize, pl));
