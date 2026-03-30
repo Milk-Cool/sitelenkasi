@@ -16,7 +16,14 @@ const consonantModAddIn = document.querySelector("#v2-consonant-mod-add-in") as 
 const consonantCanvas = document.querySelector("#v2-consonant") as HTMLCanvasElement;
 const consonantCtx = consonantCanvas.getContext("2d")!;
 
-for(const ctx of [vowelCtx, consonantCtx]) {
+const phraseIn = document.querySelector("#v2-phrase-input") as HTMLInputElement;
+const phraseScaleIn = document.querySelector("#v2-phrase-scale-in") as HTMLInputElement;
+const phraseScaleOut = document.querySelector("#v2-phrase-scale-out") as HTMLSpanElement;
+const phraseErrors = document.querySelector("#v2-phrase-errors") as HTMLSpanElement;
+const phraseCanvas = document.querySelector("#v2-phrase") as HTMLCanvasElement;
+const phraseCtx = phraseCanvas.getContext("2d")!;
+
+for(const ctx of [vowelCtx, consonantCtx, phraseCtx]) {
     ctx.strokeStyle = "black";
     ctx.lineWidth = 5;
     ctx.lineCap = "round";
@@ -296,3 +303,94 @@ consonantMannerIn.addEventListener("change", generateConsonantGUI);
 consonantModIn.addEventListener("change", generateConsonantGUI);
 consonantModAddIn.addEventListener("change", generateConsonantGUI);
 generateConsonantGUI();
+
+// yes i just copypasted the entire thing
+const generatePhrase = (ctx: CanvasRenderingContext2D, w: number, h: number, phrase: string) => {
+    const maxLen = Math.max(Object.values(consonants).sort((a, b) => b.length - a.length)[0].length, Object.keys(ipaVowels).sort((a, b) => b.length - a.length)[0].length);
+    let i = 0;
+    const arr: ["vowel" | "consonant" | "subphrase", ...any][] = [];
+    while(i < phrase.length) {
+        if(phrase[i] === "[") {
+            let depth = 1, subphrase = ""; i++;
+            while(i < phrase.length && depth > 0) {
+                const c = phrase[i++];
+                if(c === "[") depth++;
+                else if(c === "]") depth--;
+                if(depth !== 0) subphrase += c;
+            }
+            if(depth !== 0) return -1;
+            arr.push(["subphrase", subphrase]);
+            continue;
+        }
+        let skip = 1;
+        for(let x = maxLen; x > 0; x--) {
+            if(Object.values(consonants).includes(phrase.slice(i, i + x))) {
+                const k = Object.entries(consonants).find(y => y[1] === phrase.slice(i, i + x))![0].split("+");
+                const modAdd: ConsonantModifierAdditional[] = [];
+                let skipAdd = 0;
+                if(phrase[i + x] === "ʲ") { modAdd.push("palatalized"); skipAdd++; }
+                if(k.length === 3) {
+                    arr.push(["consonant", k[0], "none", k[1], k[2], modAdd]);
+                } else if(k.length === 4) {
+                    arr.push(["consonant", ...k, modAdd]);
+                } else {
+                    arr.push(["consonant", ...k.slice(0, 4), k[4].split("~").concat(modAdd)])
+                }
+                skip = x + skipAdd; break;
+            } else if(Object.keys(ipaVowels).includes(phrase.slice(i, i + x))) {
+                const vowel = ipaVowels[phrase.slice(i, i + x)];
+                arr.push(["vowel", vowel[3], vowel[4], vowel[2]]);
+                skip = x; break;
+            }
+        }
+        i += skip;
+    }
+
+    const halfCircumference = Math.PI * w;
+    const size = halfCircumference / arr.length * 0.35;
+    for(let i = 0; i < arr.length; i++) {
+        const angle = -Math.PI + Math.PI * (i / (arr.length - 1));
+        const pointX = arr.length === 1 ? w / 2 : Math.cos(angle) * w / 3 + w / 2;
+        const pointY = arr.length === 1 ? h / 2 : Math.sin(angle) * h / 3 + h / 2;
+
+        ctx.save();
+        ctx.translate(pointX, pointY);
+        ctx.rotate(angle + Math.PI / 2);
+        ctx.translate(-size / 2, -size / 2);
+        if(arr[i][0] === "vowel")
+            generateVowel(ctx, size, size, ...arr[i].slice(1) as [VowelOpenness, VowelBackness, boolean]);
+        else if(arr[i][0] === "consonant")
+            generateConsonant(ctx, size, size, ...arr[i].slice(1) as [ConsonantPlace, ConsonantPlaceOpt, ConsonantManner, ConsonantModifier, ConsonantModifierAdditional[]]);
+        else if(arr[i][0] === "subphrase")
+            if(generatePhrase(ctx, size, size, arr[i][1]) === -1) return -1;
+        ctx.restore();
+
+        ctx.beginPath();
+        ctx.moveTo(w / 2, 3 * h / 4);
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        ctx.bezierCurveTo(w / 2, h / 2, pointX - cos * (size / 2 + w / 32), pointY - sin * (size / 2 + w / 32), pointX - cos * size / 2, pointY - sin * size / 2);
+        ctx.stroke();
+    }
+    
+    ctx.beginPath();
+    ctx.moveTo(w / 2, 3 * h / 4);
+    ctx.lineTo(w / 2, h);
+    ctx.stroke();
+}
+const generatePhraseGUI = () => {
+    phraseCanvas.width = phraseCanvas.height = phraseScaleIn.valueAsNumber;
+    phraseScaleOut.innerText = phraseScaleIn.value;
+    phraseCtx.lineWidth = 3;
+
+    phraseCtx.clearRect(0, 0, phraseCanvas.width, phraseCanvas.height);
+    pad(phraseCtx, phraseCanvas.width, phraseCanvas.height, 100);
+    const out = generatePhrase(phraseCtx, phraseCanvas.width, phraseCanvas.height, phraseIn.value);
+    phraseErrors.innerText = out === -1
+        ? "invalid brackets"
+        : "";
+    phraseCtx.restore();
+}
+phraseIn.addEventListener("change", generatePhraseGUI);
+phraseScaleIn.addEventListener("change", generatePhraseGUI);
+generatePhraseGUI();
