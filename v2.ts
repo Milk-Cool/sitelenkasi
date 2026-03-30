@@ -37,7 +37,7 @@ for(const backness of vowelBacknesses)
 const generateVowelLeaf = (ctx: CanvasRenderingContext2D, w: number, h: number, openness: VowelOpenness | "none", rounded: boolean) => {
     ctx.beginPath();
     ctx.moveTo(w / 2, h);
-    ctx.lineTo(w / 2, 0);
+    ctx.lineTo(w / 2, 3 * h / 16);
     ctx.moveTo(w / 2, 0);
     ctx.bezierCurveTo(rounded ? w / 4 : w / 2, 0, w / 16, 3 * h / 4, w / 2, 3 * h / 4);
     ctx.bezierCurveTo(15 * w / 16, 3 * h / 4, rounded ? 3 * w / 4 : w / 2, 0, w / 2, 0);
