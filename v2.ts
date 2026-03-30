@@ -1,4 +1,4 @@
-import { ConsonantManner, consonantManners, ConsonantModifier, ConsonantModifierAdditional, consonantModifiers, consonantModifiersAdditional, ConsonantPlace, ConsonantPlaceOpt, consonantPlaces, consonantPlacesOpt, consonants, getConsonantIPA, ipaVowels, makeOption, pad, VowelBackness, vowelBacknesses, VowelOpenness, vowelOpennesses } from "./common";
+import { ConsonantManner, consonantManners, ConsonantModifier, ConsonantModifierAdditional, consonantModifiers, consonantModifiersAdditional, ConsonantPlace, ConsonantPlaceOpt, consonantPlaces, consonantPlacesOpt, consonants, exampleSize, generateCard, getConsonantIPA, ipaVowels, makeOption, pad, VowelBackness, vowelBacknesses, VowelOpenness, vowelOpennesses } from "./common";
 
 const vowelOpennessIn = document.querySelector("#v2-vowel-openness-in") as HTMLSelectElement;
 const vowelBacknessIn = document.querySelector("#v2-vowel-backness-in") as HTMLSelectElement;
@@ -394,3 +394,44 @@ const generatePhraseGUI = () => {
 phraseIn.addEventListener("change", generatePhraseGUI);
 phraseScaleIn.addEventListener("change", generatePhraseGUI);
 generatePhraseGUI();
+
+const vowelExamples = ["i", "y", "a", "e", "o", "u"];
+const consonantExamples = ["b", "p", "k", "l", "w", "xʼ", "kʘ"];
+
+for(const openness of vowelOpennesses)
+    generateCard(document.querySelector("#v2-key-vowels-openness") as HTMLDivElement, "openness: " + openness,
+        ctx => generateVowelLeaf(ctx, exampleSize, exampleSize, openness, false), 3);
+for(const backness of vowelBacknesses)
+    generateCard(document.querySelector("#v2-key-vowels-backness") as HTMLDivElement, "backness: " + backness,
+        ctx => generateVowel(ctx, exampleSize, exampleSize, "close-mid", backness, false), 3);
+for(const rounded of [true, false])
+    generateCard(document.querySelector("#v2-key-vowels-roundedness") as HTMLDivElement, rounded ? "rounded" : "unrounded",
+        ctx => generateVowel(ctx, exampleSize, exampleSize, "close-mid", "front", rounded), 3);
+for(const ex of vowelExamples)
+    generateCard(document.querySelector("#v2-key-vowels-examples") as HTMLDivElement, `IPA: /${ex}/`,
+        ctx => generateVowel(ctx, exampleSize, exampleSize, ipaVowels[ex][3], ipaVowels[ex][4], ipaVowels[ex][2]), 3);
+for(const pl of consonantManners)
+    generateCard(document.querySelector("#v2-key-consonants-manners") as HTMLDivElement, `manner: ${pl}`,
+        ctx => generateConsonantPetal(ctx, exampleSize, exampleSize, pl), 3);
+for(const pl of consonantPlaces)
+    generateCard(document.querySelector("#v2-key-consonants-places") as HTMLDivElement, `place: ${pl}`,
+        ctx => generateConsonant(ctx, exampleSize, exampleSize, pl, "none", "approximant", "none", []), 3);
+for(const pl of consonantModifiers)
+    generateCard(document.querySelector("#v2-key-consonants-modifiers") as HTMLDivElement, `modifier: ${pl}`,
+        ctx => generateConsonant(ctx, exampleSize, exampleSize, "alveolar", "none", "sibilant fricative", pl, []), 3);
+for(const pl of (["none"] as (ConsonantModifierAdditional | "none")[]).concat([...consonantModifiersAdditional]))
+    generateCard(document.querySelector("#v2-key-consonants-additional-modifiers") as HTMLDivElement, `add. modifier: ${pl}`,
+        ctx => generateConsonant(ctx, exampleSize, exampleSize, "alveolar", "none", "lateral approximant", "voiced", pl === "none" ? [] : [pl]), 3);
+for(const ex of consonantExamples) {
+    const k = Object.entries(consonants).find(y => y[1] === ex)![0].split("+");
+    let args: [ConsonantPlace, ConsonantPlaceOpt, ConsonantManner, ConsonantModifier, ConsonantModifierAdditional[]];
+    if(k.length === 3) {
+        args = [k[0] as ConsonantPlace, "none", k[1] as ConsonantManner, k[2] as ConsonantModifier, []];
+    } else if(k.length === 4) {
+        args = [...k as [ConsonantPlace, ConsonantPlaceOpt, ConsonantManner, ConsonantModifier], []];
+    } else {
+        args = [...k.slice(0, 4) as [ConsonantPlace, ConsonantPlaceOpt, ConsonantManner, ConsonantModifier], k[4].split("~") as ConsonantModifierAdditional[]];
+    }
+    generateCard(document.querySelector("#v2-key-consonants-examples") as HTMLDivElement, `IPA: /${ex}/`,
+        ctx => generateConsonant(ctx, exampleSize, exampleSize, ...args), 3);
+}

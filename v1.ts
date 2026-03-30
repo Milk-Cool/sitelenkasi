@@ -1,4 +1,4 @@
-import { ConsonantManner, consonantManners, ConsonantModifier, ConsonantModifierAdditional, consonantModifiers, consonantModifiersAdditional, ConsonantPlace, ConsonantPlaceOpt, consonantPlaces, consonantPlacesOpt, consonants, getConsonantIPA, ipaVowels, makeOption, pad } from "./common";
+import { ConsonantManner, consonantManners, ConsonantModifier, ConsonantModifierAdditional, consonantModifiers, consonantModifiersAdditional, ConsonantPlace, ConsonantPlaceOpt, consonantPlaces, consonantPlacesOpt, consonants, exampleSize, generateCard, getConsonantIPA, ipaVowels, makeOption, pad } from "./common";
 
 const vowelF1In = document.querySelector("#v1-vowel-f1-in") as HTMLInputElement;
 const vowelF2In = document.querySelector("#v1-vowel-f2-in") as HTMLInputElement;
@@ -392,32 +392,6 @@ const generatePhraseGUI = () => {
 phraseIn.addEventListener("change", generatePhraseGUI);
 phraseScaleIn.addEventListener("change", generatePhraseGUI);
 generatePhraseGUI();
-
-const exampleSize = 150;
-const generateCard = (parent: HTMLElement, label: string, render: (ctx: CanvasRenderingContext2D) => any) => {
-    const el = document.createElement("div");
-    el.classList.add("card");
-
-    const canvas = document.createElement("canvas");
-    canvas.width = exampleSize;
-    canvas.height = exampleSize;
-    el.appendChild(canvas);
-
-    const ctx = canvas.getContext("2d")!;
-    ctx.strokeStyle = "black";
-    ctx.lineWidth = 5;
-    ctx.lineCap = "round";
-
-    pad(ctx, exampleSize, exampleSize, 20);
-    render(ctx);
-    ctx.restore();
-
-    const p = document.createElement("p");
-    p.innerText = label;
-    el.appendChild(p);
-
-    parent.appendChild(el);
-}
 
 const vowelFrequencies: ([number, number, boolean])[] = [[300, 700, false], [800, 700, true], [300, 2400, false], [800, 2400, true]];
 const vowelExamples = ["i", "y", "a", "e", "o", "u"];

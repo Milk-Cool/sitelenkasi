@@ -301,3 +301,29 @@ export const pad = (ctx: CanvasRenderingContext2D, w: number, h: number, padding
     ctx.scale((w - 2 * padding) / w, (h - 2 * padding) / h);
     ctx.translate(padding, padding);
 }
+
+export const exampleSize = 150;
+export const generateCard = (parent: HTMLElement, label: string, render: (ctx: CanvasRenderingContext2D) => any, lineWidth: number = 5) => {
+    const el = document.createElement("div");
+    el.classList.add("card");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = exampleSize;
+    canvas.height = exampleSize;
+    el.appendChild(canvas);
+
+    const ctx = canvas.getContext("2d")!;
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = "round";
+
+    pad(ctx, exampleSize, exampleSize, 20);
+    render(ctx);
+    ctx.restore();
+
+    const p = document.createElement("p");
+    p.innerText = label;
+    el.appendChild(p);
+
+    parent.appendChild(el);
+}
